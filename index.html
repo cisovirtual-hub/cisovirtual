@@ -866,6 +866,19 @@ function restart() {
   document.getElementById('prog-fill').style.width = '0%';
   document.getElementById('prog-pct').textContent  = '';
   currentQ = 1;
+
+  // Limpiar campos del formulario de empresa
+  document.getElementById('f-nombre').value    = '';
+  document.getElementById('f-sector').value    = '';
+  document.getElementById('f-empleados').value = '';
+  document.getElementById('f-ciudad').value    = '';
+  document.getElementById('f-contacto').value  = '';
+  document.getElementById('f-correo').value    = '';
+
+  // Limpiar errores de validación visibles
+  document.querySelectorAll('.field-error').forEach(el => el.classList.remove('field-error'));
+  document.querySelectorAll('.field-msg.visible').forEach(el => el.classList.remove('visible'));
+
   goTo('s-intro');
 }
 </script>
