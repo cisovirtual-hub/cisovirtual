@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagnóstico de Seguridad — CISO Virtual Pymes</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --teal:#0F6E56; --teal-mid:#1D9E75; --teal-light:#E1F5EE; --teal-glow:#5DCAA5;
+  --amber:#BA7517; --amber-light:#FAEEDA;
+  --red:#A32D2D; --red-light:#FCEBEB;
+  --orange:#C05128; --orange-light:#FAECE7;
+  --blue:#185FA5; --blue-light:#E6F1FB;
+  --purple:#4B3EA8; --purple-light:#EEEDFE;
+  --bg:#F7F6F2; --surface:#FFFFFF; --border:#E2E0D8;
+  --text:#1A1A18; --text-muted:#6B6960; --text-hint:#9B9890;
+  --radius:12px; --radius-lg:20px;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; font-size:15px; line-height:1.6; }
+
+/* HEADER */
+.header { background:var(--teal); padding:18px 32px; position:sticky; top:0; z-index:100; }
+.header-inner { max-width:620px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:20px; }
+.logo { font-family:'Syne',sans-serif; font-weight:800; font-size:17px; color:#fff; flex-shrink:0; }
+.logo span { color:var(--teal-glow); }
+.prog-wrap { flex:1; max-width:280px; }
+.prog-meta { font-size:11px; color:rgba(255,255,255,0.6); margin-bottom:5px; display:flex; justify-content:space-between; }
+.prog-bar { height:4px; background:rgba(255,255,255,0.2); border-radius:2px; overflow:hidden; }
+.prog-fill { height:100%; background:var(--teal-glow); border-radius:2px; transition:width 0.4s cubic-bezier(.4,0,.2,1); width:0%; }
+
+.main { max-width:620px; margin:0 auto; padding:40px 20px 80px; }
+.screen { display:none; }
+.screen.active { display:block; }
+
+/* INTRO */
+.intro { text-align:center; padding:32px 16px; }
+.badge { display:inline-block; background:var(--teal-light); color:var(--teal); font-size:12px; font-weight:500; padding:5px 14px; border-radius:20px; margin-bottom:20px; border:1px solid rgba(15,110,86,0.15); }
+.intro h1 { font-family:'Syne',sans-serif; font-size:30px; font-weight:800; line-height:1.15; margin-bottom:12px; letter-spacing:-0.5px; }
+.intro h1 em { color:var(--teal-mid); font-style:normal; }
+.intro p { color:var(--text-muted); font-size:15px; max-width:440px; margin:0 auto 20px; }
+.intro-note { background:var(--blue-light); border:1px solid rgba(24,95,165,0.15); border-radius:var(--radius); padding:12px 16px; font-size:13px; color:var(--blue); margin:0 auto 24px; max-width:440px; text-align:left; line-height:1.55; }
+.stats { display:flex; justify-content:center; gap:32px; margin-bottom:32px; }
+.stat-n { font-family:'Syne',sans-serif; font-size:26px; font-weight:700; color:var(--teal-mid); }
+.stat-l { font-size:12px; color:var(--text-hint); margin-top:2px; }
+
+/* BUTTONS */
+.btn { border:none; border-radius:var(--radius); font-family:'Syne',sans-serif; font-weight:600; cursor:pointer; transition:all 0.15s; }
+.btn-primary { background:var(--teal); color:#fff; padding:14px 40px; font-size:15px; }
+.btn-primary:hover { background:#0a5240; transform:translateY(-1px); }
+.btn-secondary { background:var(--bg); color:var(--text-muted); padding:11px 22px; font-size:14px; border:1px solid var(--border) !important; }
+.btn-secondary:hover { background:var(--border); }
+
+/* COMPANY FORM */
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:32px; margin-bottom:20px; }
+.card h2 { font-family:'Syne',sans-serif; font-size:19px; font-weight:700; margin-bottom:6px; }
+.card-sub { color:var(--text-muted); font-size:13px; margin-bottom:24px; }
+.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.fg { display:flex; flex-direction:column; gap:5px; }
+.fg.full { grid-column:1/-1; }
+.fg label { font-size:12px; font-weight:500; color:var(--text-muted); }
+.fg input,.fg select { padding:10px 13px; border:1px solid var(--border); border-radius:var(--radius); font-family:'DM Sans',sans-serif; font-size:14px; color:var(--text); background:var(--bg); outline:none; transition:border-color 0.2s; }
+.fg input:focus,.fg select:focus { border-color:var(--teal-mid); }
+.fg input.field-error,.fg select.field-error { border-color:var(--red); background:#fff9f9; }
+.field-msg { font-size:11px; color:var(--red); margin-top:3px; display:none; }
+.field-msg.visible { display:block; }
+.privacy-note { margin-top:14px; padding:10px 14px; background:var(--teal-light); border-radius:var(--radius); font-size:12px; color:var(--teal); border:1px solid rgba(15,110,86,0.15); line-height:1.5; }
+.nav-row { display:flex; align-items:center; justify-content:space-between; margin-top:8px; }
+
+/* QUIZ */
+.quiz-wrap { min-height:60vh; display:flex; flex-direction:column; justify-content:center; }
+.q-step { display:none; animation:slideIn 0.3s cubic-bezier(.4,0,.2,1); }
+.q-step.active { display:block; }
+@keyframes slideIn { from{opacity:0;transform:translateX(24px)} to{opacity:1;transform:translateX(0)} }
+
+.q-counter { font-size:12px; color:var(--text-hint); font-weight:500; margin-bottom:20px; display:flex; align-items:center; gap:8px; }
+.q-counter-dots { display:flex; gap:4px; }
+.dot { width:6px; height:6px; border-radius:50%; background:var(--border); transition:background 0.3s; }
+.dot.done { background:var(--teal-mid); }
+.dot.current { background:var(--teal); width:18px; border-radius:3px; }
+
+.q-domain { display:inline-block; font-size:10px; font-weight:600; padding:3px 10px; border-radius:20px; margin-bottom:12px; letter-spacing:0.3px; text-transform:uppercase; }
+.dom-identidad   { background:var(--blue-light);   color:var(--blue);   }
+.dom-infra       { background:var(--teal-light);   color:var(--teal);   }
+.dom-datos       { background:var(--amber-light);  color:var(--amber);  }
+.dom-cumplimiento{ background:var(--purple-light); color:var(--purple); }
+
+.q-text { font-family:'Syne',sans-serif; font-size:20px; font-weight:700; line-height:1.35; margin-bottom:8px; color:var(--text); }
+.q-hint-text { font-size:12px; color:var(--text-hint); margin-bottom:22px; font-style:italic; line-height:1.5; }
+
+.opts { display:flex; flex-direction:column; gap:10px; }
+.opt { padding:14px 18px; border:1.5px solid var(--border); border-radius:var(--radius-lg); background:var(--surface); cursor:pointer; font-family:'DM Sans',sans-serif; font-size:15px; color:var(--text-muted); transition:all 0.15s; text-align:left; display:flex; align-items:center; gap:12px; }
+.opt-circle { width:20px; height:20px; border-radius:50%; border:1.5px solid var(--border); flex-shrink:0; display:flex; align-items:center; justify-content:center; transition:all 0.15s; }
+.opt:hover { border-color:var(--teal-mid); color:var(--text); background:var(--teal-light); }
+.opt:hover .opt-circle { border-color:var(--teal-mid); }
+.opt.sel-yes { border-color:var(--teal-mid); background:var(--teal-light); color:var(--teal); }
+.opt.sel-yes .opt-circle { background:var(--teal-mid); border-color:var(--teal-mid); }
+.opt.sel-par { border-color:var(--amber); background:var(--amber-light); color:var(--amber); }
+.opt.sel-par .opt-circle { background:var(--amber); border-color:var(--amber); }
+.opt.sel-no  { border-color:var(--red); background:var(--red-light); color:var(--red); }
+.opt.sel-no  .opt-circle { background:var(--red); border-color:var(--red); }
+.opt-check { width:10px; height:10px; border-radius:50%; background:#fff; opacity:0; transition:opacity 0.15s; }
+.opt.sel-yes .opt-check,.opt.sel-par .opt-check,.opt.sel-no .opt-check { opacity:1; }
+
+.q-nav { display:flex; align-items:center; justify-content:space-between; margin-top:28px; padding-top:20px; border-top:1px solid var(--border); }
+.q-nav-hint { font-size:12px; color:var(--text-hint); }
+
+/* RESULTS */
+.results-hero { background:var(--teal); border-radius:var(--radius-lg); padding:36px 32px; text-align:center; color:#fff; margin-bottom:20px; }
+.res-co { font-size:12px; color:rgba(255,255,255,0.55); margin-bottom:14px; }
+.score-ring { width:110px; height:110px; margin:0 auto 14px; position:relative; }
+.score-ring svg { width:100%; height:100%; transform:rotate(-90deg); }
+.ring-track { fill:none; stroke:rgba(255,255,255,0.15); stroke-width:8; }
+.ring-fill { fill:none; stroke:var(--teal-glow); stroke-width:8; stroke-linecap:round; transition:stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1); }
+.score-num { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-family:'Syne',sans-serif; font-size:30px; font-weight:800; color:#fff; }
+.score-level { font-family:'Syne',sans-serif; font-size:20px; font-weight:700; margin-bottom:6px; }
+.score-desc { font-size:14px; color:rgba(255,255,255,0.7); max-width:380px; margin:0 auto; line-height:1.55; }
+
+.domain-row { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:20px; }
+.dom-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:14px 10px; text-align:center; }
+.dom-name { font-size:10px; color:var(--text-muted); font-weight:500; margin-bottom:8px; line-height:1.3; }
+.dom-score { font-family:'Syne',sans-serif; font-size:24px; font-weight:800; margin-bottom:3px; }
+.dom-label { font-size:10px; font-weight:600; }
+.dom-bar { height:3px; background:var(--border); border-radius:2px; margin-top:10px; overflow:hidden; }
+.dom-bar-fill { height:100%; border-radius:2px; transition:width 1s cubic-bezier(.4,0,.2,1); width:0%; }
+
+.results-table { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); overflow:hidden; margin-bottom:20px; }
+.rt-title { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; padding:14px 18px 12px; border-bottom:1px solid var(--border); }
+.rt-row { display:grid; grid-template-columns:96px 80px 1fr; border-bottom:1px solid var(--border); }
+.rt-row:last-child { border-bottom:none; }
+.rt-head { background:var(--bg); }
+.rt-head div { font-size:10px; font-weight:600; color:var(--text-hint); text-transform:uppercase; letter-spacing:0.5px; }
+.rt-row div { padding:11px 14px; font-size:13px; }
+.rt-level { font-family:'Syne',sans-serif; font-weight:700; font-size:13px !important; }
+.rt-score { color:var(--text-muted); font-weight:500; }
+.rt-desc { color:var(--text-muted); line-height:1.5; border-left:1px solid var(--border); }
+.rt-active { background:var(--teal-light); }
+.rt-active .rt-desc { border-left-color:rgba(15,110,86,0.2); }
+
+.recs-title { font-family:'Syne',sans-serif; font-size:16px; font-weight:700; margin-bottom:12px; }
+.rec { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:16px 18px; margin-bottom:10px; display:flex; gap:12px; align-items:flex-start; }
+.rec-badge { flex-shrink:0; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; margin-top:2px; white-space:nowrap; }
+.b-c { background:var(--red-light); color:var(--red); }
+.b-a { background:var(--amber-light); color:var(--amber); }
+.rec-title { font-weight:500; font-size:14px; margin-bottom:3px; }
+.rec-body { font-size:13px; color:var(--text-muted); line-height:1.55; }
+
+/* CONTACTO BLOCK */
+.contacto-block { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:20px; margin-bottom:16px; }
+.contacto-check-label { display:flex; align-items:flex-start; gap:12px; cursor:pointer; font-size:14px; color:var(--text); line-height:1.5; }
+.contacto-check-label input[type=checkbox] { display:none; }
+.contacto-check-box { width:20px; height:20px; border:1.5px solid var(--border); border-radius:6px; flex-shrink:0; margin-top:2px; display:flex; align-items:center; justify-content:center; transition:all 0.15s; background:var(--bg); }
+.contacto-check-label input:checked ~ .contacto-check-box { background:var(--teal-mid); border-color:var(--teal-mid); }
+.contacto-check-label input:checked ~ .contacto-check-box::after { content:''; width:5px; height:9px; border:2px solid #fff; border-top:none; border-left:none; transform:rotate(45deg) translateY(-1px); display:block; }
+.contacto-actions { margin-top:16px; padding-top:16px; border-top:1px solid var(--border); }
+.contacto-hint { font-size:13px; color:var(--text-muted); margin-bottom:12px; line-height:1.5; }
+.contacto-correo-confirmacion { background:var(--teal-light); border:1px solid rgba(15,110,86,0.2); border-radius:var(--radius); padding:12px 14px; font-size:13px; color:var(--teal); line-height:1.55; margin-bottom:4px; }
+.btn-whatsapp { display:flex; align-items:center; gap:10px; background:#25D366; color:#fff; border:none; padding:12px 22px; border-radius:var(--radius); font-family:'Syne',sans-serif; font-size:14px; font-weight:600; cursor:pointer; transition:all 0.15s; width:100%; justify-content:center; }
+.btn-whatsapp:hover { background:#1ebe5d; transform:translateY(-1px); }
+.contacto-correo-hint { margin-top:10px; font-size:12px; color:var(--text-hint); text-align:center; }
+
+/* ESTADO GUARDADO */
+.save-row { display:flex; align-items:center; gap:8px; font-size:12px; padding:10px 14px; border-radius:var(--radius); margin-bottom:16px; }
+.save-ok   { background:var(--teal-light); color:var(--teal); border:1px solid rgba(15,110,86,0.15); }
+.save-err  { background:var(--red-light);  color:var(--red);  border:1px solid rgba(163,45,45,0.15); }
+.save-wait { background:var(--bg); color:var(--text-muted); border:1px solid var(--border); }
+
+.upsell { background:var(--teal-light); border:1px solid rgba(15,110,86,0.2); border-radius:var(--radius-lg); padding:24px; margin-top:20px; text-align:center; }
+.upsell h3 { font-family:'Syne',sans-serif; font-size:15px; font-weight:700; color:var(--teal); margin-bottom:6px; }
+.upsell p { font-size:13px; color:var(--text-muted); margin-bottom:16px; line-height:1.55; }
+.btn-upsell { background:var(--teal); color:#fff; border:none; padding:12px 28px; border-radius:var(--radius); font-family:'Syne',sans-serif; font-size:13px; font-weight:600; cursor:pointer; transition:all 0.15s; }
+.btn-upsell:hover { background:#0a5240; }
+.btn-restart { display:block; width:100%; margin-top:12px; padding:12px; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); font-family:'Syne',sans-serif; font-size:13px; font-weight:600; color:var(--text-muted); cursor:pointer; }
+.btn-restart:hover { background:var(--border); }
+
+/* BLOQUE ENVÍO */
+.envio-block { background:var(--surface); border:1.5px solid var(--border); border-radius:var(--radius-lg); padding:22px; margin-bottom:16px; }
+.envio-title { font-family:'Syne',sans-serif; font-size:15px; font-weight:700; margin-bottom:14px; color:var(--text); }
+.envio-hint { background:var(--teal-light); border:1px solid rgba(15,110,86,0.2); border-radius:var(--radius); padding:11px 14px; font-size:13px; color:var(--teal); line-height:1.55; margin:12px 0; }
+.btn-enviar { width:100%; margin-top:16px; padding:14px; background:var(--teal); color:#fff; border:none; border-radius:var(--radius); font-family:'Syne',sans-serif; font-size:15px; font-weight:700; cursor:pointer; transition:all 0.15s; letter-spacing:0.2px; }
+.btn-enviar:hover { background:#0a5240; transform:translateY(-1px); }
+.btn-enviar:disabled { background:var(--border); color:var(--text-hint); cursor:not-allowed; transform:none; }
+.envio-ok  { background:var(--teal-light); color:var(--teal); border:1px solid rgba(15,110,86,0.15); border-radius:var(--radius); padding:11px 14px; font-size:13px; margin-top:12px; }
+.envio-err { background:var(--red-light);  color:var(--red);  border:1px solid rgba(163,45,45,0.15); border-radius:var(--radius); padding:11px 14px; font-size:13px; margin-top:12px; }
+
+@media(max-width:560px){
+  .header{padding:16px 18px;} .main{padding:24px 14px 60px;}
+  .form-grid{grid-template-columns:1fr;} .domain-row{grid-template-columns:1fr 1fr;}
+  .intro h1{font-size:24px;} .q-text{font-size:18px;}
+  .rt-row{grid-template-columns:80px 64px 1fr;}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="logo">CISO<span>Virtual</span></div>
+    <div class="prog-wrap">
+      <div class="prog-meta"><span id="prog-text">Inicio</span><span id="prog-pct"></span></div>
+      <div class="prog-bar"><div class="prog-fill" id="prog-fill"></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- ══ INTRO ══ -->
+<div class="screen active" id="s-intro">
+  <div class="intro">
+    <div class="badge">Diagnóstico gratuito · 4 minutos</div>
+    <h1>¿Qué tan segura es<br>tu <em>empresa</em> hoy?</h1>
+    <p>10 preguntas clave alineadas con ISO 27001 y la Ley 1581 de Colombia. Sin tecnicismos. Resultados inmediatos con tu plan de acción.</p>
+    <div class="intro-note">
+      🏢 <strong>Para toda empresa colombiana con sistemas informáticos:</strong> salud, educación, comercio, logística, servicios profesionales, tecnología y más. Si manejas datos de clientes o empleados, este diagnóstico es para ti.
+    </div>
+    <div class="stats">
+      <div><div class="stat-n">10</div><div class="stat-l">preguntas</div></div>
+      <div><div class="stat-n">4 min</div><div class="stat-l">duración</div></div>
+      <div><div class="stat-n">100%</div><div class="stat-l">gratuito</div></div>
+    </div>
+    <button class="btn btn-primary" onclick="goTo('s-company')">Comenzar diagnóstico</button>
+  </div>
+</div>
+
+<!-- ══ COMPANY ══ -->
+<div class="screen" id="s-company">
+  <div class="card">
+    <h2>Datos de tu empresa</h2>
+    <p class="card-sub">Aparecerán en tu reporte personalizado. No compartimos esta información con terceros.</p>
+    <div class="form-grid">
+      <div class="fg full">
+        <label>Nombre de la empresa *</label>
+        <input id="f-nombre" type="text" placeholder="Ej: Distribuidora El Progreso S.A.S." oninput="clearError('f-nombre')">
+        <span class="field-msg" id="err-nombre">Ingresa el nombre de tu empresa para continuar</span>
+      </div>
+      <div class="fg">
+        <label>Sector *</label>
+        <select id="f-sector" onchange="clearError('f-sector')">
+          <option value="">Seleccionar...</option>
+          <option>Salud — Odontología</option>
+          <option>Salud — Clínicas y consultorios</option>
+          <option>Educación — Colegios e institutos</option>
+          <option>Comercio y retail</option>
+          <option>Servicios profesionales</option>
+          <option>Contabilidad y finanzas</option>
+          <option>Tecnología y software</option>
+          <option>Logística y transporte</option>
+          <option>Manufactura</option>
+          <option>Gastronomía y turismo</option>
+          <option>Otro</option>
+        </select>
+        <span class="field-msg" id="err-sector">Selecciona el sector de tu empresa</span>
+      </div>
+      <div class="fg">
+        <label>N.° de empleados *</label>
+        <select id="f-empleados" onchange="clearError('f-empleados')">
+          <option value="">Seleccionar...</option>
+          <option>1 – 5</option>
+          <option>6 – 15</option>
+          <option>16 – 30</option>
+          <option>31 – 50</option>
+          <option>Más de 50</option>
+        </select>
+        <span class="field-msg" id="err-empleados">Selecciona el número de empleados</span>
+      </div>
+      <div class="fg full">
+        <label>Ciudad *</label>
+        <input id="f-ciudad" type="text" placeholder="Ej: Quibdó, Medellín, Bogotá..." oninput="clearError('f-ciudad')">
+        <span class="field-msg" id="err-ciudad">Ingresa la ciudad de tu empresa</span>
+      </div>
+      <div class="fg">
+        <label>Tu nombre *</label>
+        <input id="f-contacto" type="text" placeholder="Nombre de quien responde" oninput="clearError('f-contacto')">
+        <span class="field-msg" id="err-contacto">Ingresa tu nombre para continuar</span>
+      </div>
+      <div class="fg">
+        <label>Correo electrónico *</label>
+        <input id="f-correo" type="email" placeholder="correo@tuempresa.com" oninput="clearError('f-correo')">
+        <span class="field-msg" id="err-correo">Ingresa un correo válido</span>
+      </div>
+    </div>
+    <div class="privacy-note">
+      🔒 <strong>Solo recopilamos lo necesario.</strong> Tu correo se usa únicamente para enviarte tu reporte y hacer seguimiento a tus recomendaciones. No compartimos tus datos con terceros ni almacenamos información sensible innecesaria — aplicamos lo mismo que recomendamos.
+    </div>
+  </div>
+  <div class="nav-row">
+    <button class="btn btn-secondary" onclick="goTo('s-intro')">Atrás</button>
+    <button class="btn btn-primary" onclick="startQuiz()" style="padding:12px 32px;font-size:14px;">Comenzar</button>
+  </div>
+</div>
+
+<!-- ══ QUIZ ══ -->
+<div class="screen" id="s-quiz">
+  <div class="quiz-wrap">
+
+    <!-- P1: Cuentas únicas -->
+    <div class="q-step active" id="qs-1">
+      <div class="q-counter"><span>Pregunta 1 de 10</span><div class="q-counter-dots" id="dots-1"></div></div>
+      <span class="q-domain dom-identidad">Gestión de identidad</span>
+      <div class="q-text">¿Cada empleado tiene su propia cuenta personal para acceder a los sistemas? (Sin cuentas compartidas)</div>
+      <div class="q-hint-text">Cuando dos personas comparten un usuario y contraseña, es imposible saber quién hizo qué. Y cuando alguien se va, el acceso queda abierto para todos.</div>
+      <div class="opts">
+        <button class="opt" onclick="pick(1,'si',10,this)"><span class="opt-circle"><span class="opt-check"></span></span>Sí, cada empleado tiene su propia cuenta en todos los sistemas</button>
+        <button class="opt" onclick="pick(1,'par',5,this)"><span class="opt-circle"><span class="opt-check"></span></span>En algunos sistemas sí, pero en otros compartimos accesos</button>
+        <button class="opt" onclick="pick(1,'no',0,this)"><span class="opt-circle"><span class="opt-check"></span></span>No, usamos cuentas compartidas o no lo controlamos</button>
+      </div>
+      <div class="q-nav"><button class="btn btn-secondary" onclick="prevQ(1)">Atrás</button><span class="q-nav-hint">Selecciona una opción para continuar</span></div>
+    </div>
+
+    <!-- P2: MFA -->
+    <div class="q-step" id="qs-2">
+      <div class="q-counter"><span>Pregunta 2 de 10</span><div class="q-counter-dots" id="dots-2"></div></div>
+      <span class="q-domain dom-identidad">Doble verificación (2FA)</span>
+      <div class="q-text">¿Tienen activada la verificación en dos pasos en los correos y sistemas principales del negocio?</div>
+      <div class="q-hint-text">El robo de contraseñas es el ataque más común. El doble factor lo bloquea aunque la contraseña ya haya sido robada: el atacante necesita también el código del celular.</div>
+      <div class="opts">
+        <button class="opt" onclick="pick(2,'si',10,this)"><span class="opt-circle"><span class="opt-check"></span></span>Sí, en el correo y las aplicaciones principales</button>
+        <button class="opt" onclick="pick(2,'par',5,this)"><span class="opt-circle"><span class="opt-check"></span></span>Solo en algunas cuentas o para ciertos empleados</button>
+        <button class="opt" onclick="pick(2,'no',0,this)"><span class="opt-circle"><span class="opt-check"></span></span>No lo tenemos activado</button>
+      </div>
+      <div class="q-nav"><button class="btn btn-secondary" onclick="prevQ(2)">Atrás</button><span class="q-nav-hint">Selecciona una opción para continuar</span></div>
+    </div>
+
+    <!-- P3: Control de salida -->
+    <div class="q-step" id="qs-3">
+      <div class="q-counter"><span>Pregunta 3 de 10</span><div class="q-counter-dots" id="dots-3"></div></div>
+      <span class="q-domain dom-identidad">Control de salida</span>
+      <div class="q-text">Cuando un empleado deja la empresa, ¿eliminan de inmediato su acceso a correos, sistemas y carpetas compartidas?</div>
+      <div class="q-hint-text">Un exempleado con acceso activo es una amenaza silenciosa y muy subestimada. Puede pasar semanas antes de que alguien lo note — tiempo suficiente para extraer información sensible.</div>
+      <div class="opts">
+        <button class="opt" onclick="pick(3,'si',10,this)"><span class="opt-circle"><span class="opt-check"></span></span>Sí, tenemos un proceso formal y lo hacemos el mismo día</button>
+        <button class="opt" onclick="pick(3,'par',5,this)"><span class="opt-circle"><span class="opt-check"></span></span>Lo hacemos eventualmente, pero sin un proceso definido</button>
+        <button class="opt" onclick="pick(3,'no',0,this)"><span class="opt-circle"><span class="opt-check"></span></span>No existe un proceso — puede quedar el acceso activo por tiempo indefinido</button>
+      </div>
+      <div class="q-nav"><button class="btn btn-secondary" onclick="prevQ(3)">Atrás</button><span class="q-nav-hint">Selecciona una opción para continuar</span></div>
+    </div>
+
+    <!-- P4: Cifrado de disco -->
+    <div class="q-step" id="qs-4">
+      <div class="q-counter"><span>Pregunta 4 de 10</span><div class="q-counter-dots" id="dots-4"></div></div>
+      <span class="q-domain dom-infra">Cifrado de dispositivos</span>
+      <div class="q-text">¿Los computadores y portátiles de la empresa tienen el disco cifrado (protegido con contraseña de inicio)?</div>
+      <div class="q-hint-text">Sin cifrado, quien robe un portátil puede leer toda la información sin necesitar ninguna contraseña — simplemente conecta el disco a otro equipo. Con BitLocker activado, el disco es ilegible sin la clave.</div>
+      <div class="opts">
+        <button class="opt" onclick="pick(4,'si',10,this)"><span class="opt-circle"><span class="opt-check"></span></span>Sí, con contraseña de inicio y disco cifrado (BitLocker o similar)</button>
+        <button class="opt" onclick="pick(4,'par',5,this)"><span class="opt-circle"><span class="opt-check"></span></span>Tienen contraseña de inicio, pero no sabemos si el disco está cifrado</button>
+        <button class="opt" onclick="pick(4,'no',0,this)"><span class="opt-circle"><span class="opt-check"></span></span>No tienen protección o no lo controlamos</button>
+      </div>
+      <div class="q-nav"><button class="btn btn-secondary" onclick="prevQ(4)">Atrás</button><span class="q-nav-hint">Selecciona una opción para continuar</span></div>
+    </div>
+
+    <!-- P5: Software con licencia -->
+    <div class="q-step" id="qs-5">
+      <div class="q-counter"><span>Pregunta 5 de 10</span><div class="q-counter-dots" id="dots-5"></div></div>
+      <span class="q-domain dom-infra">Software con licencia</span>
+      <div class="q-text">¿Todo el software usado en la empresa — sistema operativo, Office, antivirus — tiene licencia original y vigente?</div>
+      <div class="q-hint-text">El software pirata no recibe actualizaciones de seguridad y frecuentemente viene con malware preinstalado. Es una de las principales puertas de entrada para atacantes en pymes colombianas.</div>
+      <div class="opts">
+        <button class="opt" onclick="pick(5,'si',10,this)"><span class="opt-circle"><span class="opt-check"></span></span>Sí, todo el software tiene licencia vigente</button>
+        <button class="opt" onclick="pick(5,'par',5,this)"><span class="opt-circle"><span class="opt-check"></span></span>La mayoría sí, pero hay algún software sin licencia</button>
+        <button class="opt" onclick="pick(5,'no',0,this)"><span class="opt-circle"><span class="opt-check"></span></span>Usamos software sin licencia o no lo controlamos</button>
+      </div>
+      <div class="q-nav"><button class="btn btn-secondary" onclick="prevQ(5)">Atrás</button><span class="q-nav-hint">Selecciona una opción para continuar</span></div>
+    </div>
+
+    <!-- P6: Antivirus -->
+    <div class="q-step" id="qs-6">
+      <div class="q-counter"><span>Pregunta 6 de 10</span><div class="q-counter-dots" id="dots-6"></div></div>
+      <span class="q-domain dom-infra">Protección de equipos</span>
+      <div class="q-text">¿Tienen antivirus activo y actualizado en todos los computadores de la empresa?</div>
+      <div class="q-hint-text">Windows Defender, bien configurado, es una base sólida y completamente gratuita. Lo crítico es que esté activo en todos los equipos — no solo en algunos — porque un solo equipo sin protección puede infectar a los demás.</div>
+      <div class="opts">
+        <button class="opt" onclick="pick(6,'si',10,this)"><span class="opt-circle"><span class="opt-check"></span></span>Sí, en todos los equipos y al día</button>
+        <button class="opt" onclick="pick(6,'par',5,this)"><span class="opt-circle"><span class="opt-check"></span></span>En algunos equipos, o no sabemos si está actualizado</button>
+        <button class="opt" onclick="pick(6,'no',0,this)"><span class="opt-circle"><span class="opt-check"></span></span>No, o varios equipos están sin protección</button>
+      </div>
+      <div class="q-nav"><button class="btn btn-secondary" onclick="prevQ(6)">Atrás</button><span class="q-nav-hint">Selecciona una opción para continuar</span></div>
+    </div>
+
+    <!-- P7: Red Wi-Fi -->
+    <div class="q-step" id="qs-7">
+      <div class="q-counter"><span>Pregunta 7 de 10</span><div class="q-counter-dots" id="dots-7"></div></div>
+      <span class="q-domain dom-infra">Segmentación de red</span>
+      <div class="q-text">¿La red Wi-Fi de los empleados es independiente de la que usan clientes, visitantes o proveedores?</div>
+      <div class="q-hint-text">Compartir la misma red con clientes o visitantes les permite acceder a carpetas internas, impresoras y sistemas del negocio. Crear una red de invitados separada toma 10 minutos en cualquier router moderno.</div>
+      <div class="opts">
+        <button class="opt" onclick="pick(7,'si',10,this)"><span class="opt-circle"><span class="opt-check"></span></span>Sí, tenemos redes completamente separadas para empleados y visitantes</button>
+        <button class="opt" onclick="pick(7,'noapl',10,this)"><span class="opt-circle"><span class="opt-check"></span></span>No tenemos Wi-Fi para clientes o visitantes — no aplica</button>
+        <button class="opt" onclick="pick(7,'no',0,this)"><span class="opt-circle"><span class="opt-check"></span></span>No, todos usan la misma red Wi-Fi</button>
+      </div>
+      <div class="q-nav"><button class="btn btn-secondary" onclick="prevQ(7)">Atrás</button><span class="q-nav-hint">Selecciona una opción para continuar</span></div>
+    </div>
+
+    <!-- P8: Backups -->
+    <div class="q-step" id="qs-8">
+      <div class="q-counter"><span>Pregunta 8 de 10</span><div class="q-counter-dots" id="dots-8"></div></div>
+      <span class="q-domain dom-datos">Copias de seguridad</span>
+      <div class="q-text">¿Hacen respaldos de la información crítica fuera de la oficina — en la nube o en un disco externo guardado en otro lugar — al menos una vez por semana?</div>
+      <div class="q-hint-text">Un ataque de ransomware puede cifrar todos los archivos en minutos. Si el backup está en el mismo lugar que los archivos originales, también queda cifrado. Sin backup externo, la pérdida es total e irrecuperable.</div>
+      <div class="opts">
+        <button class="opt" onclick="pick(8,'si',10,this)"><span class="opt-circle"><span class="opt-check"></span></span>Sí, backup automático en la nube o en sitio externo</button>
+        <button class="opt" onclick="pick(8,'par',5,this)"><span class="opt-circle"><span class="opt-check"></span></span>Hacemos respaldos pero en el mismo equipo o de forma irregular</button>
+        <button class="opt" onclick="pick(8,'no',0,this)"><span class="opt-circle"><span class="opt-check"></span></span>No hacemos respaldos regulares</button>
+      </div>
+      <div class="q-nav"><button class="btn btn-secondary" onclick="prevQ(8)">Atrás</button><span class="q-nav-hint">Selecciona una opción para continuar</span></div>
+    </div>
+
+    <!-- P9: Actualizaciones -->
+    <div class="q-step" id="qs-9">
+      <div class="q-counter"><span>Pregunta 9 de 10</span><div class="q-counter-dots" id="dots-9"></div></div>
+      <span class="q-domain dom-datos">Actualizaciones de seguridad</span>
+      <div class="q-text">¿Los equipos de la empresa tienen activadas las actualizaciones automáticas de seguridad de Windows o del sistema operativo?</div>
+      <div class="q-hint-text">Los atacantes explotan vulnerabilidades conocidas en las 72 horas siguientes a su publicación. Con actualizaciones automáticas, ese riesgo se cierra sin esfuerzo. Un equipo sin actualizar por más de un mes es una ventana de riesgo abierta.</div>
+      <div class="opts">
+        <button class="opt" onclick="pick(9,'si',10,this)"><span class="opt-circle"><span class="opt-check"></span></span>Sí, actualizaciones automáticas activas o las revisamos semanalmente</button>
+        <button class="opt" onclick="pick(9,'par',5,this)"><span class="opt-circle"><span class="opt-check"></span></span>Las instalamos cuando nos acordamos, pero puede pasar más de un mes</button>
+        <button class="opt" onclick="pick(9,'no',0,this)"><span class="opt-circle"><span class="opt-check"></span></span>Rara vez actualizamos o los equipos tienen las actualizaciones desactivadas</button>
+      </div>
+      <div class="q-nav"><button class="btn btn-secondary" onclick="prevQ(9)">Atrás</button><span class="q-nav-hint">Selecciona una opción para continuar</span></div>
+    </div>
+
+    <!-- P10: Ley 1581 -->
+    <div class="q-step" id="qs-10">
+      <div class="q-counter"><span>Pregunta 10 de 10</span><div class="q-counter-dots" id="dots-10"></div></div>
+      <span class="q-domain dom-cumplimiento">Habeas Data — Ley 1581</span>
+      <div class="q-text">¿Tienen una Política de Tratamiento de Datos Personales publicada — en su sitio web, en el local físico o en los contratos con clientes?</div>
+      <div class="q-hint-text">La Ley 1581 de 2012 obliga a toda empresa que recoja datos de personas (nombre, teléfono, correo) a tener esta política visible. El incumplimiento puede generar multas de hasta 2.000 salarios mínimos de la SIC.</div>
+      <div class="opts">
+        <button class="opt" onclick="pick(10,'si',10,this)"><span class="opt-circle"><span class="opt-check"></span></span>Sí, está redactada, aprobada y publicada</button>
+        <button class="opt" onclick="pick(10,'par',5,this)"><span class="opt-circle"><span class="opt-check"></span></span>Estamos trabajando en implementarla o la tenemos en borrador</button>
+        <button class="opt" onclick="pick(10,'no',0,this)"><span class="opt-circle"><span class="opt-check"></span></span>No la tenemos o no sabemos qué es</button>
+      </div>
+      <div class="q-nav"><button class="btn btn-secondary" onclick="prevQ(10)">Atrás</button><span class="q-nav-hint">Última pregunta — ¡casi terminas!</span></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ RESULTS ══ -->
+<div class="screen" id="s-results">
+
+  <div class="results-hero">
+    <div class="res-co" id="res-co"></div>
+    <div class="score-ring">
+      <svg viewBox="0 0 110 110">
+        <circle class="ring-track" cx="55" cy="55" r="46"/>
+        <circle class="ring-fill" id="ring-arc" cx="55" cy="55" r="46" stroke-dasharray="289" stroke-dashoffset="289"/>
+      </svg>
+      <div class="score-num" id="score-num">—</div>
+    </div>
+    <div class="score-level" id="score-level">—</div>
+    <div class="score-desc" id="score-desc">—</div>
+  </div>
+
+  <div class="domain-row" id="domain-row"></div>
+
+  <div class="results-table">
+    <div class="rt-title">¿Qué significa tu nivel?</div>
+    <div class="rt-row rt-head">
+      <div>Nivel</div><div>Puntaje</div><div>Qué implica para tu negocio</div>
+    </div>
+    <div class="rt-row" id="rt-inicial">
+      <div class="rt-level" style="color:var(--red)">Inicial</div>
+      <div class="rt-score">0 – 34</div>
+      <div class="rt-desc">Exposición crítica. Un incidente puede paralizar operaciones, generar pérdidas de datos de clientes y multas por la Ley 1581.</div>
+    </div>
+    <div class="rt-row" id="rt-basico">
+      <div class="rt-level" style="color:var(--orange)">Básico</div>
+      <div class="rt-score">35 – 59</div>
+      <div class="rt-desc">Controles parciales con brechas importantes. Un atacante con herramientas básicas puede comprometer tu información.</div>
+    </div>
+    <div class="rt-row" id="rt-intermedio">
+      <div class="rt-level" style="color:var(--amber)">Intermedio</div>
+      <div class="rt-score">60 – 79</div>
+      <div class="rt-desc">Buena base, pero las brechas restantes son las más explotadas. Unas pocas acciones concretas llevan tu postura a nivel sólido.</div>
+    </div>
+    <div class="rt-row" id="rt-avanzado">
+      <div class="rt-level" style="color:var(--teal-mid)">Avanzado</div>
+      <div class="rt-score">80 – 100</div>
+      <div class="rt-desc">Aplicas buenas prácticas para una pyme. El siguiente paso es monitoreo técnico continuo y cumplimiento normativo formal.</div>
+    </div>
+  </div>
+
+  <div class="recs-title">Tu plan de acción — qué hacer primero</div>
+  <div id="recs-list"></div>
+
+  <!-- BLOQUE ENVÍO: checkbox + botón enviar -->
+  <div class="envio-block" id="envio-block">
+    <div class="envio-title">¿Quieres que te contactemos?</div>
+    <label class="contacto-check-label">
+      <input type="checkbox" id="quiere-contacto">
+      <span class="contacto-check-box"></span>
+      <span>Sí — quiero recibir información del diagnóstico completo en mi correo y que un experto me contacte</span>
+    </label>
+    <div class="envio-hint" id="envio-hint-correo" style="display:none;">
+      📧 Te enviaremos la información a <strong id="correo-destino"></strong> y recibirás copia en tu carpeta de entrada. Revisa también spam.
+    </div>
+    <button class="btn-enviar" id="btn-enviar" onclick="enviarDiagnostico()">
+      Enviar mi diagnóstico
+    </button>
+    <div id="envio-status"></div>
+  </div>
+
+  <!-- BLOQUE POST-ENVÍO: WhatsApp + upsell (aparece después de enviar) -->
+  <div class="post-envio-block" id="post-envio-block" style="display:none;">
+    <div class="upsell">
+      <h3>¿Quieres el diagnóstico completo?</h3>
+      <p>Este fue el diagnóstico rápido de 10 puntos. El servicio CISO Virtual incluye evaluación de 40 controles en 6 dominios, monitoreo técnico de tu infraestructura y acompañamiento de un experto certificado.</p>
+      <button class="btn-upsell" onclick="contactarWhatsApp()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink:0;vertical-align:middle;margin-right:8px"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Hablar por WhatsApp ahora
+      </button>
+    </div>
+  </div>
+
+  <button class="btn-restart" onclick="restart()">Hacer nuevo diagnóstico</button>
+</div>
+
+</div><!-- /main -->
+
+<script>
+// ─────────────────────────────────────────────
+// CONFIGURACIÓN — actualizar con valores reales
+// ─────────────────────────────────────────────
+// ─── PEGA TU URL DE APPS SCRIPT EN LA LÍNEA DE ABAJO ────────────
+// ═══ PEGA AQUÍ TU URL DE APPS SCRIPT (empieza por https://script.google.com/macros/s/...) ═══
+const SHEETS_URL  = 'https://script.google.com/macros/s/AKfycbz5CDJGp0aV0cRV0w0KFXr6Xp2HB7UmDu_M4y-7YiFZqKZ8NQ3L8otYVvlqEcjdtacoCg/exec';
+// ════════════════════════════════════════════════════════════════════════════════════════════
+// ────────────────────────────────────────────────────────────────
+const WA_NUMBER   = '573003583015';
+const CORREO_CISO = 'soportecisovirtual@gmail.com';
+
+// ─────────────────────────────────────────────
+// DATOS DEL CUESTIONARIO
+// ─────────────────────────────────────────────
+const scores = {};
+const types  = {};
+const MAX    = 100;
+
+const domainMap    = { 1:'identidad',2:'identidad',3:'identidad', 4:'infra',5:'infra',6:'infra',7:'infra', 8:'datos',9:'datos', 10:'cumplimiento' };
+const domainMax    = { identidad:30, infra:40, datos:20, cumplimiento:10 };
+const domainLabels = { identidad:'Accesos e identidad', infra:'Infraestructura', datos:'Datos y continuidad', cumplimiento:'Cumplimiento legal' };
+const domainColors = { identidad:'var(--blue)', infra:'var(--teal-mid)', datos:'var(--amber)', cumplimiento:'var(--purple)' };
+
+let currentQ = 1;
+let datosResultado = {};
+let yaGuardado   = false;  // true después de guardar en Sheets (no repetir)
+let yaContactado = false;  // true después de enviar correo (no repetir)
+
+// ─────────────────────────────────────────────
+// NAVEGACIÓN
+// ─────────────────────────────────────────────
+function renderDots(forQ) {
+  const el = document.getElementById('dots-'+forQ);
+  if (!el) return;
+  let html = '';
+  for (let i=1;i<=10;i++) {
+    if (i===forQ) html += '<div class="dot current"></div>';
+    else if (scores[i]!==undefined) html += '<div class="dot done"></div>';
+    else html += '<div class="dot"></div>';
+  }
+  el.innerHTML = html;
+}
+
+function goTo(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+  const labels = {'s-intro':'Inicio','s-company':'Tu empresa','s-quiz':'Cuestionario','s-results':'Tu diagnóstico'};
+  document.getElementById('prog-text').textContent = labels[id] || '';
+}
+
+function clearError(id) {
+  const el  = document.getElementById(id);
+  const err = document.getElementById('err-'+id.replace('f-',''));
+  if (el)  el.classList.remove('field-error');
+  if (err) err.classList.remove('visible');
+}
+
+function startQuiz() {
+  const fields = [
+    { id:'f-nombre',   check: v => v.trim().length > 0 },
+    { id:'f-sector',   check: v => v !== '' },
+    { id:'f-empleados',check: v => v !== '' },
+    { id:'f-ciudad',   check: v => v.trim().length > 0 },
+    { id:'f-contacto', check: v => v.trim().length > 0 },
+    { id:'f-correo',   check: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) },
+  ];
+  let valid = true, firstError = null;
+  fields.forEach(f => {
+    const el  = document.getElementById(f.id);
+    const err = document.getElementById('err-'+f.id.replace('f-',''));
+    if (!f.check(el.value)) {
+      el.classList.add('field-error');
+      if (err) err.classList.add('visible');
+      if (!firstError) firstError = el;
+      valid = false;
+    }
+  });
+  if (!valid) { firstError.scrollIntoView({behavior:'smooth',block:'center'}); firstError.focus(); return; }
+  currentQ = 1;
+  showQ(1);
+  goTo('s-quiz');
+}
+
+function showQ(n) {
+  document.querySelectorAll('.q-step').forEach(s=>s.classList.remove('active'));
+  const step = document.getElementById('qs-'+n);
+  if (step) {
+    step.classList.add('active');
+    step.querySelectorAll('.opt').forEach(b=>b.classList.remove('sel-yes','sel-par','sel-no'));
+    if (types[n] !== undefined) {
+      const typeMap = {si:'yes',par:'par',no:'no',noapl:'yes'};
+      step.querySelectorAll('.opt').forEach(b => {
+        if ((b.getAttribute('onclick')||'').includes("'"+types[n]+"'"))
+          b.classList.add('sel-'+(typeMap[types[n]]||'yes'));
+      });
+    }
+  }
+  renderDots(n);
+  currentQ = n;
+  const pct = Math.round(((n-1)/10)*85)+5;
+  document.getElementById('prog-fill').style.width = pct+'%';
+  document.getElementById('prog-pct').textContent  = n+'/10';
+  document.getElementById('prog-text').textContent = 'Pregunta '+n+' de 10';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function pick(qnum, type, val, btn) {
+  const step = document.getElementById('qs-'+qnum);
+  step.querySelectorAll('.opt').forEach(b=>b.classList.remove('sel-yes','sel-par','sel-no'));
+  btn.classList.add('sel-'+(type==='noapl'?'yes':type));
+  scores[qnum] = val;
+  types[qnum]  = type;
+  renderDots(qnum);
+  setTimeout(()=>{ if (qnum < 10) showQ(qnum+1); else calcResults(); }, 400);
+}
+
+function prevQ(n) {
+  if (n===1) { goTo('s-company'); return; }
+  showQ(n-1);
+}
+
+// ─────────────────────────────────────────────
+// CHECKBOX — se puede marcar antes O después de enviar
+// ─────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('quiere-contacto').addEventListener('change', function() {
+    const hint   = document.getElementById('envio-hint-correo');
+    const correo = document.getElementById('f-correo').value || '';
+    document.getElementById('correo-destino').textContent = correo;
+
+    if (this.checked) {
+      hint.style.display = 'block';
+      // Si el diagnóstico ya fue guardado en Sheets, enviar correo inmediatamente
+      if (yaGuardado && !yaContactado) {
+        enviarCorreoContacto();
+      }
+    } else {
+      hint.style.display = 'none';
+    }
+  });
+});
+
+// ─────────────────────────────────────────────
+// GUARDAR EN SHEETS — solo una vez al presionar el botón
+// ─────────────────────────────────────────────
+function enviarDiagnostico() {
+  if (yaGuardado) return;
+
+  const btn    = document.getElementById('btn-enviar');
+  const status = document.getElementById('envio-status');
+  const quiere = document.getElementById('quiere-contacto').checked;
+
+  if (!SHEETS_URL || SHEETS_URL.includes('TU_GOOGLE')) {
+    status.innerHTML = '<div class="envio-err">⚙️ La URL de Apps Script no está configurada.</div>';
+    return;
+  }
+
+  btn.disabled    = true;
+  btn.textContent = '⏳ Enviando...';
+  status.innerHTML = '';
+
+  const payload = {
+    ...datosResultado,
+    accion:          'diagnostico',
+    quiere_contacto: quiere ? 'Sí' : 'No',
+    fecha:           new Date().toLocaleString('es-CO', {timeZone:'America/Bogota'})
+  };
+
+  fetch(SHEETS_URL, {
+    method: 'POST', mode: 'no-cors',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  })
+  .then(() => {
+    yaGuardado      = true;
+    btn.textContent = '✅ Diagnóstico enviado';
+
+    if (quiere) {
+      // Ya marcó el checkbox antes de enviar — enviar correo ahora
+      enviarCorreoContacto();
+      status.innerHTML = `<div class="envio-ok">✅ Listo. Información enviada a <strong>${datosResultado.correo}</strong>. Revisa también spam.</div>`;
+    } else {
+      status.innerHTML = '<div class="envio-ok">✅ Diagnóstico registrado. Si quieres que te contactemos, marca la casilla de arriba.</div>';
+    }
+
+    document.getElementById('post-envio-block').style.display = 'block';
+    document.getElementById('envio-block').style.borderColor  = 'rgba(15,110,86,0.3)';
+  })
+  .catch(() => {
+    btn.disabled    = false;
+    btn.textContent = 'Enviar mi diagnóstico';
+    status.innerHTML = `<div class="envio-err">⚠️ No se pudo enviar. Escríbenos a <strong>${CORREO_CISO}</strong></div>`;
+  });
+}
+
+// ─────────────────────────────────────────────
+// ENVIAR CORREO AL CLIENTE — independiente del guardado
+// Se llama desde dos lugares:
+//   1. Al enviar el formulario si el checkbox ya estaba marcado
+//   2. Al marcar el checkbox si el formulario ya fue guardado
+// ─────────────────────────────────────────────
+function enviarCorreoContacto() {
+  if (yaContactado) return;
+  if (!SHEETS_URL || SHEETS_URL.includes('TU_GOOGLE')) return;
+
+  yaContactado = true;
+
+  // Usar todos los campos de datosResultado para que el script tenga todo lo necesario
+  fetch(SHEETS_URL, {
+    method: 'POST', mode: 'no-cors',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      accion:  'interes',
+      correo:  datosResultado.correo   || '',
+      nombre:  datosResultado.contacto || '',   // nombre del contacto
+      empresa: datosResultado.nombre   || '',   // nombre de la empresa
+      score:   datosResultado.score    || 0,
+      nivel:   datosResultado.nivel    || ''
+    })
+  })
+  .then(() => {
+    const correo = datosResultado.correo || '';
+    document.getElementById('envio-hint-correo').innerHTML =
+      `📧 Correo enviado a <strong>${correo}</strong>. Revisa también tu carpeta de spam.`;
+    if (yaGuardado) {
+      document.getElementById('envio-status').innerHTML =
+        `<div class="envio-ok">✅ ¡Listo! Te contactaremos pronto en <strong>${correo}</strong>.</div>`;
+    }
+  })
+  .catch(() => { yaContactado = false; });
+}
+
+function contactarWhatsApp() {
+  const empresa = document.getElementById('f-nombre').value || '';
+  const score   = document.getElementById('score-num').textContent || '';
+  const nivel   = document.getElementById('score-level').textContent || '';
+  const msg = encodeURIComponent(`Hola, acabo de hacer el diagnóstico gratuito de CISO Virtual para ${empresa} y obtuve ${score}/100 (${nivel}). Me interesa el diagnóstico completo.`);
+  window.open(`https://wa.me/${WA_NUMBER}?text=${msg}`, '_blank');
+}
+
+// ─────────────────────────────────────────────
+// CÁLCULO DE RESULTADOS
+// ─────────────────────────────────────────────
+function calcResults() {
+  const total   = Object.values(scores).reduce((a,b)=>a+b,0);
+  const pct     = total;
+  const nombre  = document.getElementById('f-nombre').value   || 'Tu empresa';
+  const sector  = document.getElementById('f-sector').value   || '';
+  const empls   = document.getElementById('f-empleados').value|| '';
+  const ciudad  = document.getElementById('f-ciudad').value   || '';
+  const contacto= document.getElementById('f-contacto').value || '';
+  const correo  = document.getElementById('f-correo').value   || '';
+
+  document.getElementById('res-co').textContent = nombre + (sector ? ' · '+sector : '');
+  document.getElementById('score-num').textContent = pct;
+
+  let level, desc, color;
+  if (pct>=80)      { level='Nivel avanzado';    color='#1D9E75'; desc='Tienes controles sólidos para una pyme. El siguiente paso es monitoreo técnico continuo y preparación formal para cumplimiento (Ley 1581, ISO 27001).'; }
+  else if (pct>=60) { level='Nivel intermedio';  color='#BA7517'; desc='Hay buenas prácticas pero existen brechas que un atacante puede aprovechar. Actúa sobre las recomendaciones en los próximos 30 días.'; }
+  else if (pct>=35) { level='Nivel básico';      color='#C05128'; desc='Tu empresa tiene exposición real. Un incidente hoy puede generar pérdidas serias. Prioriza las acciones críticas esta semana.'; }
+  else               { level='Nivel inicial';    color='#A32D2D'; desc='Exposición crítica. Sin controles mínimos eres un blanco fácil. Varias de estas acciones se pueden tomar hoy mismo, sin costo.'; }
+
+  document.getElementById('score-level').textContent = level;
+  document.getElementById('score-desc').textContent  = desc;
+  document.getElementById('ring-arc').style.stroke   = color;
+  setTimeout(()=>{ document.getElementById('ring-arc').style.strokeDashoffset = 289-(289*pct/100); }, 300);
+
+  // Scores por dominio
+  const domTotals = {identidad:0,infra:0,datos:0,cumplimiento:0};
+  Object.entries(scores).forEach(([q,v])=>{ const d=domainMap[parseInt(q)]; if(d) domTotals[d]+=v; });
+
+  const domRow = document.getElementById('domain-row');
+  domRow.innerHTML = '';
+  Object.entries(domTotals).forEach(([d,sum])=>{
+    const dp = Math.round((sum/domainMax[d])*100);
+    const dc = dp>=70 ? domainColors[d] : dp>=45 ? 'var(--amber)' : 'var(--red)';
+    const dl = dp>=70 ? 'Adecuado' : dp>=45 ? 'Mejorable' : 'Crítico';
+    domRow.innerHTML += `<div class="dom-card"><div class="dom-name">${domainLabels[d]}</div><div class="dom-score" style="color:${dc}">${dp}</div><div class="dom-label" style="color:${dc}">${dl}</div><div class="dom-bar"><div class="dom-bar-fill" style="background:${dc}" data-w="${dp}"></div></div></div>`;
+  });
+  setTimeout(()=>{ document.querySelectorAll('.dom-bar-fill').forEach(el=>{ el.style.width=el.dataset.w+'%'; }); }, 400);
+
+  ['rt-inicial','rt-basico','rt-intermedio','rt-avanzado'].forEach(id=>document.getElementById(id)?.classList.remove('rt-active'));
+  document.getElementById(pct>=80?'rt-avanzado':pct>=60?'rt-intermedio':pct>=35?'rt-basico':'rt-inicial')?.classList.add('rt-active');
+
+  // Recomendaciones
+  const recs = [];
+  if ((scores[1]||0)<10) recs.push({p:'Crítico',t:'Eliminar cuentas compartidas',b:'Crea una cuenta individual por empleado en todos los sistemas. Usa el mismo correo corporativo como identidad única. Costo: $0. Tiempo estimado: 1 hora para un equipo de 10 personas.'});
+  if ((scores[2]||0)<10) recs.push({p:'Crítico',t:'Activar verificación en dos pasos (2FA)',b:'En Google: Cuenta → Seguridad → Verificación en 2 pasos. En Microsoft 365: Portal de admin → MFA. Toma 5 minutos por cuenta y bloquea el 99% de los ataques de robo de contraseña.'});
+  if ((scores[3]||0)<10) recs.push({p:'Crítico',t:'Crear checklist de salida de empleados',b:'Una hoja con todos los accesos por empleado (correo, Drive, sistemas, redes sociales). Al salir, se desactivan ese mismo día. Implementación: 30 minutos con una hoja de cálculo.'});
+  if ((scores[4]||0)<10) recs.push({p:'Crítico',t:'Activar cifrado de disco en portátiles',b:'Windows 10/11 Pro: Inicio → BitLocker → Activar. Sin cifrado, un portátil robado equivale a entregar todos los datos del negocio al ladrón.'});
+  if ((scores[5]||0)<10) recs.push({p:'Alto',t:'Regularizar licencias de software',b:'Microsoft 365 Business Basic desde $6 USD/mes incluye Office, correo y OneDrive. El software pirata no recibe parches de seguridad y frecuentemente contiene malware preinstalado.'});
+  if ((scores[6]||0)<10) recs.push({p:'Crítico',t:'Activar antivirus en todos los equipos',b:'Windows Defender está incluido en Windows 10/11. Actívalo desde el Panel de Control en cada equipo. Costo: $0. Tiempo: 5 minutos por equipo.'});
+  if ((scores[7]||0)<10) recs.push({p:'Alto',t:'Crear red Wi-Fi separada para visitantes',b:'En tu router: Configuración → Red de invitados → Activar. Toma 10 minutos y evita que dispositivos externos accedan a tu red interna.'});
+  if ((scores[8]||0)<10) recs.push({p:'Crítico',t:'Implementar backup semanal fuera de la oficina',b:'Google Drive, OneDrive o Dropbox Business desde $5 USD/mes con backup automático. Sin backup externo, un ransomware puede eliminar años de trabajo en minutos.'});
+  if ((scores[9]||0)<10) recs.push({p:'Alto',t:'Activar actualizaciones automáticas',b:'Windows: Configuración → Windows Update → Automático. Los atacantes explotan vulnerabilidades conocidas en las 72 horas siguientes a su publicación.'});
+  if ((scores[10]||0)<10) recs.push({p:'Alto',t:'Implementar Política de Tratamiento de Datos (Ley 1581)',b:'La SIC ofrece modelos de política gratuitos en sic.gov.co. Debe estar publicada en tu sitio web o visible en el local físico. Sin ella puedes recibir multas de hasta 2.000 salarios mínimos.'});
+
+  recs.sort((a,b)=>(a.p==='Crítico'?0:1)-(b.p==='Crítico'?0:1));
+  const recsList = document.getElementById('recs-list');
+  recsList.innerHTML = '';
+  (recs.length ? recs : [{p:'Alto',t:'Mantener y monitorear los controles actuales',b:'Tu empresa tiene una postura sólida. El siguiente paso es el diagnóstico completo de 40 controles para detectar brechas técnicas avanzadas.'}])
+    .slice(0,6).forEach(r=>{
+      recsList.innerHTML += `<div class="rec"><span class="rec-badge ${r.p==='Crítico'?'b-c':'b-a'}">${r.p}</span><div><div class="rec-title">${r.t}</div><div class="rec-body">${r.b}</div></div></div>`;
+    });
+
+  // Resetear bloque de envío
+  document.getElementById('post-envio-block').style.display  = 'none';
+  document.getElementById('envio-status').innerHTML          = '';
+  document.getElementById('btn-enviar').disabled             = false;
+  document.getElementById('btn-enviar').textContent          = 'Enviar mi diagnóstico';
+  document.getElementById('quiere-contacto').checked         = false;
+  document.getElementById('envio-hint-correo').style.display = 'none';
+  document.getElementById('envio-hint-correo').innerHTML     = '📧 Te enviaremos la información a <strong id="correo-destino"></strong> y recibirás copia en tu carpeta de entrada. Revisa también spam.';
+  yaGuardado   = false;
+  yaContactado = false;
+
+  // Guardar datos para enviarDiagnostico()
+  datosResultado = { nombre, sector, empleados:empls, ciudad, contacto, correo, score:pct, nivel:level,
+    identidad:    Math.round((domTotals.identidad   /domainMax.identidad   )*100),
+    infra:        Math.round((domTotals.infra        /domainMax.infra       )*100),
+    datos:        Math.round((domTotals.datos        /domainMax.datos       )*100),
+    cumplimiento: Math.round((domTotals.cumplimiento /domainMax.cumplimiento)*100),
+    respuestas:   JSON.stringify(types)
+  };
+
+  goTo('s-results');
+  document.getElementById('prog-fill').style.width = '100%';
+  document.getElementById('prog-pct').textContent  = '';
+  document.getElementById('prog-text').textContent = 'Tu diagnóstico';
+}
+
+// ─────────────────────────────────────────────
+// REINICIO
+// ─────────────────────────────────────────────
+function restart() {
+  Object.keys(scores).forEach(k=>delete scores[k]);
+  Object.keys(types).forEach(k=>delete types[k]);
+  datosResultado = {};
+  yaGuardado     = false;
+  yaContactado   = false;
+  document.querySelectorAll('.opt').forEach(b=>b.classList.remove('sel-yes','sel-par','sel-no'));
+  document.getElementById('prog-fill').style.width = '0%';
+  document.getElementById('prog-pct').textContent  = '';
+  currentQ = 1;
+  goTo('s-intro');
+}
+</script>
+</body>
+</html>
